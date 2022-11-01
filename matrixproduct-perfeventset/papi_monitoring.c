@@ -1,6 +1,6 @@
-#define PACKAGE_index 0
-#define PP0_index 10
-#define DRAM_index 17
+#define PAPI_REF_CYC_N 0
+#define PAPI_SP_OPS_N 1
+#define PAPI_VEC_SP_N 2
 #define MAX_EVENTS 24
 
 #include <stdio.h>
@@ -19,47 +19,13 @@
 #include <pthread.h>
 
 static char event_names[MAX_EVENTS][PAPI_MAX_STR_LEN] = {
-
-    "rapl:::THERMAL_SPEC_CNT:PACKAGE0",
-    "rapl:::MINIMUM_POWER_CNT:PACKAGE0",
-    "rapl:::MAXIMUM_POWER_CNT:PACKAGE0",
-    "rapl:::MAXIMUM_TIME_WINDOW_CNT:PACKAGE0",
-    "rapl:::PACKAGE_ENERGY_CNT:PACKAGE0",
-    "rapl:::DRAM_ENERGY_CNT:PACKAGE0",
-    "rapl:::PSYS_ENERGY_CNT:PACKAGE0",
-    "rapl:::PP0_ENERGY_CNT:PACKAGE0",
-    "rapl:::THERMAL_SPEC:PACKAGE0",
-    "rapl:::MINIMUM_POWER:PACKAGE0",
-    "rapl:::MAXIMUM_POWER:PACKAGE0",
-    "rapl:::MAXIMUM_TIME_WINDOW:PACKAGE0",
-    "rapl:::PACKAGE_ENERGY:PACKAGE0",
-    "rapl:::DRAM_ENERGY:PACKAGE0",
-    "rapl:::PSYS_ENERGY:PACKAGE0",
-    "rapl:::PP0_ENERGY:PACKAGE0" /*,
-    "powercap:::ENERGY_UJ:ZONE0",
-    "powercap:::MAX_ENERGY_RANGE_UJ:ZONE0",
-    "powercap:::MAX_POWER_A_UW:ZONE0",
-    "powercap:::POWER_LIMIT_A_UW:ZONE0",
-    "powercap:::TIME_WINDOW_A_US:ZONE0",
-    "powercap:::MAX_POWER_B_UW:ZONE0",
-    "powercap:::POWER_LIMIT_B_UW:ZONE0",
-    "powercap:::TIME_WINDOW_B:ZONE0",
-    "powercap:::ENABLED:ZONE0",
-    "powercap:::NAME:ZONE0",
-    "powercap:::ENERGY_UJ:ZONE0_SUBZONE0",
-    "powercap:::MAX_ENERGY_RANGE_UJ:ZONE0_SUBZONE0",
-    "powercap:::MAX_POWER_A_UW:ZONE0_SUBZONE0",
-    "powercap:::POWER_LIMIT_A_UW:ZONE0_SUBZONE0",
-    "powercap:::TIME_WINDOW_A_US:ZONE0_SUBZONE0",
-    "powercap:::ENABLED:ZONE0_SUBZONE0",
-    "powercap:::NAME:ZONE0_SUBZONE0",
-    "powercap:::ENERGY_UJ:ZONE0_SUBZONE1",
-    "powercap:::MAX_ENERGY_RANGE_UJ:ZONE0_SUBZONE1",
-    "powercap:::MAX_POWER_A_UW:ZONE0_SUBZONE1",
-    "powercap:::POWER_LIMIT_A_UW:ZONE0_SUBZONE1",
-    "powercap:::TIME_WINDOW_A_US:ZONE0_SUBZONE1",
-    "powercap:::ENABLED:ZONE0_SUBZONE1",
-    "powercap:::NAME:ZONE0_SUBZONE1"*/
+    /*"PAPI_L1_DCM",
+    "PAPI_L2_DCM",
+    "PAPI_L2_DCA",
+    "PAPI_L3_DCA",*/
+    "PAPI_REF_CYC",
+    "PAPI_SP_OPS",
+    "PAPI_VEC_SP"
 };
 
 long long PAPI_start_AND_time(int *EventSet){
@@ -146,12 +112,12 @@ void file_management(char filenames[MAX_EVENTS][MPI_MAX_PROCESSOR_NAME+PAPI_MIN_
     for (int i = 0; i < MAX_EVENTS; i++){
         // only file for monitoring pp0, package and dram energy consumption
         sprintf(filenames[i], "%s_res.%s", processor_name, event_names[i]);
-        if (i == PACKAGE_index || i == PP0_index || i == DRAM_index){
-            if(MPI_File_open(*MPI_COMM_NODE, filenames[i], access_mode, MPI_INFO_NULL, fff[i]) != MPI_SUCCESS){
-                printf("[MPI process] Failure in opening files.\n");
-                MPI_Abort(*MPI_COMM_NODE, EXIT_FAILURE);
-            }
+        
+        if(MPI_File_open(*MPI_COMM_NODE, filenames[i], access_mode, MPI_INFO_NULL, fff[i]) != MPI_SUCCESS){
+            printf("[MPI process] Failure in opening files.\n");
+            MPI_Abort(*MPI_COMM_NODE, EXIT_FAILURE);
         }
+        
     }
 }
 
@@ -187,29 +153,29 @@ void end_monitoring(long long * values, int *EventSet, long long start_time, cha
     long long stop_time ;
     double total_time;
     int max_len=200;
-    char buf_PKG[max_len];
-    char buf_PP0[max_len];
-    char buf_RAM[max_len];
+    char buf_PAPI_REF_CYC[max_len];
+    char buf_PAPI_SP_OPS[max_len];
+    char buf_PAPI_VEC_SP[max_len];
     //papi stop = stop monitoring and time
     stop_time=PAPI_stop_AND_time(EventSet, values);
     total_time = ((double)(stop_time - start_time)) / 1.0e9;
     //open all file to save values of the processor in it
     file_management(filenames, processor_name, fff, MPI_COMM_NODE);
     
-    snprintf(buf_PKG, max_len, "%.04f %.3f \n", total_time, ((double)values[PACKAGE_index] / 1.0e6));
-    snprintf(buf_PP0, max_len, "%.04f %.3f \n", total_time, ((double)values[PP0_index] / 1.0e6));
-    snprintf(buf_RAM, max_len, "%.04f %.3f \n", total_time, ((double)values[DRAM_index] / 1.0e6));
-    MPI_File_write(*fff[PACKAGE_index], buf_PKG, strlen(buf_PKG), MPI_LONG_LONG_INT, MPI_STATUS_IGNORE);
-    MPI_File_write(*fff[PP0_index], buf_PP0, strlen(buf_PP0), MPI_LONG_LONG_INT, MPI_STATUS_IGNORE);
-    MPI_File_write(*fff[DRAM_index], buf_RAM, strlen(buf_RAM), MPI_LONG_LONG_INT, MPI_STATUS_IGNORE);
+    snprintf(buf_PAPI_REF_CYC, max_len, "%.04f %.3f \n", total_time, ((double)values[PAPI_REF_CYC_N] / 1.0e6));
+    snprintf(buf_PAPI_SP_OPS, max_len, "%.04f %.3f \n", total_time, ((double)values[PAPI_SP_OPS_N] / 1.0e6));
+    snprintf(buf_PAPI_VEC_SP, max_len, "%.04f %.3f \n", total_time, ((double)values[PAPI_VEC_SP_N] / 1.0e6));
+    MPI_File_write(*fff[PAPI_REF_CYC_N], buf_PAPI_REF_CYC, strlen(buf_PAPI_REF_CYC), MPI_LONG_LONG_INT, MPI_STATUS_IGNORE);
+    MPI_File_write(*fff[PAPI_SP_OPS_N], buf_PAPI_SP_OPS, strlen(buf_PAPI_SP_OPS), MPI_LONG_LONG_INT, MPI_STATUS_IGNORE);
+    MPI_File_write(*fff[PAPI_VEC_SP_N], buf_PAPI_VEC_SP, strlen(buf_PAPI_VEC_SP), MPI_LONG_LONG_INT, MPI_STATUS_IGNORE);
 
     for (int i = 0; i < MAX_EVENTS; i++){
-        if (i == PACKAGE_index || i == PP0_index || i == DRAM_index){
-            if(MPI_File_close(fff[i]) != MPI_SUCCESS){
-                printf("[MPI process] Failure in closing files.\n");
-                MPI_Abort(*MPI_COMM_NODE, EXIT_FAILURE);
-            }
+        
+        if(MPI_File_close(fff[i]) != MPI_SUCCESS){
+            printf("[MPI process] Failure in closing files.\n");
+            MPI_Abort(*MPI_COMM_NODE, EXIT_FAILURE);
         }
+    
     }
 
     
