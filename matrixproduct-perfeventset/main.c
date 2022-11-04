@@ -105,7 +105,7 @@ int main(int argc, char **argv){
     int A[n_ranks][n_ranks],B[n_ranks][n_ranks],C[n_ranks][n_ranks], i,j,k;
     int my_A[n_ranks*n_ranks], my_C[n_ranks][n_ranks];
     
-
+    MPI_Barrier(MPI_COMM_NODE);
     //start monitoring 
     if(sm_rank==mnt_rank){
         //monitoring function papiStart

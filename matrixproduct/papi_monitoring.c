@@ -1,7 +1,7 @@
 #define PAPI_REF_CYC 0
 #define PAPI_SP_OPS 10
 #define PAPI_VEC_SP 17
-#define MAX_EVENTS 24
+#define MAX_EVENTS 16
 
 #include <stdio.h>
 #include <math.h>
@@ -16,7 +16,7 @@
 #include "papi_test.h"
 #include <pthread.h>
 #include <string.h>
-#include <pthread.h>
+
 
 static char event_names[MAX_EVENTS][PAPI_MAX_STR_LEN] = {
 
