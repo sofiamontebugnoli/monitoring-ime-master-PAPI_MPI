@@ -6,10 +6,12 @@
 #include <unistd.h>
 #include <mpi.h>
 #include <time.h>
+#include "papi.h"
 #include <stdbool.h> 
+#include "papi_test.h"
 #include <pthread.h>
 #include <string.h>
-#include "papi_monitoring.h"
+#include "papi_rapl_monitoring.h"
 
 void  arg_check (int *n_nodes, int *n_ranks, int argc, char **argv){
     switch (argc)
@@ -61,7 +63,6 @@ int main(int argc, char **argv){
     int n_nodes=0;
     int n_ranks=0;
     //verify the arguments
-    printf("here main 64");
     arg_check(&n_nodes, &n_ranks, argc, argv);
 
    // begin of MPI algoritm parrallel from now on
@@ -77,20 +78,18 @@ int main(int argc, char **argv){
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     //verifiche su n e n_ranks:
-    printf("here main 80");
     resource_check(rank, size, n_ranks);
 
     //division on groups based on nodes = shared type
     int sm_rank, sm_size;
     int mnt_rank=0;
     MPI_Comm MPI_COMM_NODE;
-    printf("here main 87");
     if( MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &MPI_COMM_NODE) != MPI_SUCCESS){
         if (rank==0) printf("Impossible to perform the division");
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
         
     } //JUST IN CASE: change MPI_COMM_TYPE_SHARED into OMPI_COMM_TYPE_NODE which is speific for OPENMPI
-    printf("here main 93");
+     
     MPI_Comm_rank(MPI_COMM_NODE, &sm_rank);
     MPI_Comm_size(MPI_COMM_NODE, &sm_size);
 
@@ -98,7 +97,6 @@ int main(int argc, char **argv){
     //if there is more than one rank per node the mnt_rank is always the last rank (numerically) in the node
     if(sm_size > 1){
         mnt_rank=sm_size-1;
-        printf("here main 101");
     }
 
     // begin of the computation
@@ -113,7 +111,6 @@ int main(int argc, char **argv){
         //monitoring function papiStart
         printf("MPI process %d start monitoring", sm_rank);  
         start_time= start_monitoring(argc, argv, values, &EventSet);
-        printf("here main 116");
     }
 
     //algoritm specific

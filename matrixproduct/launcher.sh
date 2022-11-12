@@ -9,4 +9,4 @@
 #SBATCH --gres=msrsafe
 #SBATCH --exclusive
 
-srun ./main
+srun ./main $1 $2
