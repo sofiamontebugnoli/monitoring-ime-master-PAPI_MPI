@@ -1,0 +1,9 @@
+cff-version: 0.0.1
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Montebugnoli
+    given-names: Sofia
+title: "IMe vs ScaLAPACK: an energy monitoring framework"
+version: 0.0.1
+doi: 
+date-released: 2022-12-06
